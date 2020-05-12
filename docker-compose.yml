@@ -1,0 +1,39 @@
+version: '3.3'
+# docker-compose version 1.24.1, build 4667896b
+# this will create three containers, rasa, rasa action server, redis store
+# you will need to put a proxy or ngrok in front of the 5005 port to connect slack
+services:
+  rasa:
+    image:
+      rasa/rasa:latest-full
+    ports:
+      - 5005:5005
+    volumes:
+      - ./:/app
+    command:
+      - run
+  action_server:
+    image: rasa/rasa-sdk:latest
+    volumes:
+      - ./actions:/app/actions
+    configs:
+      -my_config
+  redis:
+    image: 'bitnami/redis:5.0'
+    environment:
+      # ALLOW_EMPTY_PASSWORD is recommended only for development
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_DB=1
+      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
+    ports:
+    - '6379:6379'
+    volumes:
+    - 'redis_data:/bitnami/redis/data'
+
+volumes:
+  redis_data:
+    driver: local
+
+configs:
+  my_config:
+    file:./app/endpoints/yml
